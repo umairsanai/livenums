@@ -4,6 +4,14 @@ import { broadcastUpdate } from "./socketController.js";
 export const categories = new Map([["RANDOM", generateRandomNumber()], ["COUNTER", 1]]);
 
 
+
+export function getTotalClients(req, res, next) {
+    res.status(200).json({
+        number: req.socketServer.clients.size
+    }); 
+}
+
+
 // RANDOM
 export function getRandomNumber(req, res, next) {
     res.status(200).json({

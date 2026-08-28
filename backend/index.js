@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import express from "express";
-import { decrementCounter, getCounter, getRandomNumber, incrementCounter, updateRandomNumber } from "./restController.js";
+import { decrementCounter, getCounter, getRandomNumber, getTotalClients, incrementCounter, updateRandomNumber } from "./restController.js";
 import { attatchSocketServer } from "./helpers.js";
 import { handlePongTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
 
@@ -16,6 +16,8 @@ const server = app.listen(PORT, HOST, () => {
 const socketServer = new WebSocketServer({ server, path: "/websocket" });
 
 app.use(attatchSocketServer(socketServer));
+
+app.get("/clients", getTotalClients);
 
 // RANDOM
 app.get("/random", getRandomNumber);
