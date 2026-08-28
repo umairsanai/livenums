@@ -33,6 +33,11 @@ export function sendAllCountsMessage(client) {
     }));
 }
 
+export function sendPongMessage(client) {
+    client.send(JSON.stringify({
+        type: "PONG"
+    }));   
+}
 
 
 
@@ -44,4 +49,8 @@ export function handleSubscribeTypeMessage(socket, message) {
 
     socket.subscribedTo = message.subscribeTo;
     sendUpdateMessage(socket, categories.get(message.subscribeTo));
+}
+
+export function handlePongTypeMessage(socket) {
+    sendPongMessage(socket);
 }

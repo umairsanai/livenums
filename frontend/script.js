@@ -13,15 +13,45 @@ boxes.forEach(box => {
 });
 
 // --- WebSocket Setup ---
-const socketUrl = 'wss://livenums-backend.vercel.app/websocket';
+
+const socketUrl = 'wss://livenums.onrender.com/websocket';
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 
 const socket = new WebSocket(socketUrl);
 
-socket.onopen = handleSocketOpenEvent;
-socket.onclose = handleSocketCloseEvent;
-socket.onerror = handleSocketErrorEvent;
+socket.onopen = () => {
+    statusDot.classList.add('connected');
+    statusText.textContent = 'Connected';
+
+    const PINT_INTERVAL_TIME = 10; // seconds
+    const pingInterval = setInterval(() => {
+        socket.send(JSON.stringify({
+            type: "PING"
+        }));
+    }, PINT_INTERVAL_TIME * 1000);
+
+
+    socket.onclose = () => {
+        statusDot.classList.remove('connected');
+        statusText.textContent = 'Disconnected';
+
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+    };
+
+
+    socket.onerror = (error) => {
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+        console.error('WebSocket Error:', error);
+        alert("Something went wrong.... Check the console.");
+    };
+};
 
 socket.onmessage = (event) => {
 
@@ -38,23 +68,8 @@ socket.onmessage = (event) => {
         document.getElementById("randomValue").textContent = message.data.random;
         document.getElementById("counterValue").textContent = message.data.count;
     }
+
+    if (message.type === "PONG") {
+        // DO NOTHING 
+    }
 };
-
-
-
-
-
-function handleSocketOpenEvent() {
-    statusDot.classList.add('connected');
-    statusText.textContent = 'Connected';
-}
-
-function handleSocketCloseEvent() {
-    statusDot.classList.remove('connected');
-    statusText.textContent = 'Disconnected';
-}
-
-function handleSocketErrorEvent(error) {
-    console.error('WebSocket Error:', error);
-    alert("Something went wrong.... Check the console.");
-}

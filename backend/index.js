@@ -2,7 +2,7 @@ import { WebSocketServer } from "ws";
 import express from "express";
 import { decrementCounter, getCounter, getRandomNumber, incrementCounter, updateRandomNumber } from "./restController.js";
 import { attatchSocketServer } from "./helpers.js";
-import { handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
+import { handlePongTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
 
 const PORT = 3000;
 const HOST  = "0.0.0.0";
@@ -36,6 +36,10 @@ socketServer.on("connection", (socket, request) => {
 
         if (message?.type?.toString() === "SUBSCRIBE") 
             return handleSubscribeTypeMessage(socket, message);
+        if (message?.type?.toString() === "PING") {
+            console.log("PING Message Received!");
+            return handlePongTypeMessage(socket);
+        }
     });
     
     socket.on("error", (error) => {
