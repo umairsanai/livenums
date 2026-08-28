@@ -37,7 +37,6 @@ socketServer.on("connection", (socket, request) => {
         if (message?.type?.toString() === "SUBSCRIBE") 
             return handleSubscribeTypeMessage(socket, message);
         if (message?.type?.toString() === "PING") {
-            console.log("PING Message Received!");
             return handlePongTypeMessage(socket);
         }
     });
