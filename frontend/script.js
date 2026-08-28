@@ -13,7 +13,7 @@ boxes.forEach(box => {
 });
 
 // --- WebSocket Setup ---
-const socketUrl = 'ws://localhost:3000/websocket';
+const socketUrl = 'wss://livenums-backend.vercel.app/websocket';
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 
