@@ -1,28 +1,26 @@
-// --- Box Selection Logic ---
+const socketUrl = 'wss://livenums.onrender.com/websocket';
+const socket = new WebSocket(socketUrl);
+
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+
 const boxes = document.querySelectorAll('.box');
+
+// --- Box Selection Logic ---
 
 boxes.forEach(box => {
     box.addEventListener('click', () => {
         boxes.forEach(b => b.classList.remove('active'));
-        box.classList.add('active');
-        socket.send(JSON.stringify({
-            type: "SUBSCRIBE",
-            subscribeTo: box.dataset.boxName
-        }));
+        makeBoxActive(box);
     });
 });
 
 // --- WebSocket Setup ---
 
-const socketUrl = 'wss://livenums.onrender.com/websocket';
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-
-const socket = new WebSocket(socketUrl);
-
 socket.onopen = () => {
     statusDot.classList.add('connected');
     statusText.textContent = 'Connected';
+    makeRandomBoxActive();
 
     const PINT_INTERVAL_TIME = 10; // seconds
     const pingInterval = setInterval(() => {
@@ -73,3 +71,20 @@ socket.onmessage = (event) => {
         // DO NOTHING 
     }
 };
+
+function makeRandomBoxActive() {
+    const randomBox = document.getElementById("randomBox");
+    if (!randomBox) 
+        return alert("Random box not found!");
+    makeBoxActive(randomBox);
+}
+
+function makeBoxActive(box) {
+    box.classList.add('active');
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "SUBSCRIBE",
+            subscribeTo: box.dataset.boxName
+        }));
+    }
+}
