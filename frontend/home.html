@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Data Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer type="module" src="script.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Welcome Back</h1>
+    <div class="connection-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <main class="boxes-container">
+    <div class="box" data-box-name="RANDOM" id="randomBox">
+      <h2 class="box-title">RANDOM</h2>
+      <div class="box-value" id="randomValue">0</div>
+    </div>
+
+    <div class="box" data-box-name="COUNTER" id="counterBox">
+      <h2 class="box-title">COUNTER</h2>
+      <div class="box-value" id="counterValue">0</div>
+    </div>
+  </main>
+</body>
+</html>

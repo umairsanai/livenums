@@ -1,0 +1,112 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #0f172a;
+    color: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* --- Header --- */
+header {
+    text-align: center;
+    margin-bottom: 7.5rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: 0.05em;
+    color: #e2e8f0;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.connection-status {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ef4444; /* Default to red/disconnected */
+    transition: background-color 0.3s ease;
+}
+
+.status-dot.connected {
+    background-color: #22c55e; /* Green */
+    box-shadow: 0 0 8px #22c55e;
+}
+
+/* --- Boxes Container --- */
+.boxes-container {
+    display: flex;
+    gap: 2rem;
+    width: 100%;
+    max-width: 800px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* --- Individual Box Styling --- */
+.box {
+    background-color: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 16px;
+    flex: 1 1 300px;
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.box:hover {
+    border-color: #475569;
+    transform: translateY(-4px);
+}
+
+/* Active / Selected Box State */
+.box.active {
+    border-color: #38bdf8;
+    background-color: #1a2c4e;
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), 
+                inset 0 0 15px rgba(56, 189, 248, 0.1);
+    transform: scale(1.02);
+}
+
+.box-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+.box.active .box-title {
+    color: #38bdf8;
+}
+
+.box-value {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
