@@ -1,11 +1,12 @@
 import { WebSocketServer } from "ws";
 import express from "express";
 import { decrementCounter, getCounter, getRandomNumber, getTotalClients, incrementCounter, updateRandomNumber } from "./restController.js";
-import { attatchSocketServer } from "./helpers.js";
-import { handlePongTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
+import { attatchSocketServerToRequest } from "./helpers.js";
+import { handlePingTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
 
 const PORT = 3000;
 const HOST  = "0.0.0.0";
+const SOCKET_TIMEOUT_INTERVAL = 30; // seconds
 
 const app = express();
 
@@ -15,7 +16,7 @@ const server = app.listen(PORT, HOST, () => {
 });
 const socketServer = new WebSocketServer({ server, path: "/websocket" });
 
-app.use(attatchSocketServer(socketServer));
+app.use(attatchSocketServerToRequest(socketServer));
 
 app.get("/clients", getTotalClients);
 
@@ -31,22 +32,35 @@ app.post("/counter/decrement", decrementCounter);
 
 socketServer.on("connection", (socket, request) => {
 
+    socket.lastActiveTime = Date.now();
     sendAllCountsMessage(socket);
 
-    socket.on("message", (data) => {
-        const message = JSON.parse(data.toString());
-
-        if (message?.type?.toString() === "SUBSCRIBE") 
-            return handleSubscribeTypeMessage(socket, message);
-        if (message?.type?.toString() === "PING") {
-            return handlePongTypeMessage(socket);
+    const intervalID = setInterval(() => {
+        if (Date.now() - socket.lastActiveTime >= SOCKET_TIMEOUT_INTERVAL * 1000) {
+            socket.terminate();
         }
+    }, SOCKET_TIMEOUT_INTERVAL * 1000);
+    
+    socket.on("message", (data) => {
+        socket.lastActiveTime = Date.now();
+        
+        const message = JSON.parse(data.toString());
+        
+        if (message?.type?.toString() === "SUBSCRIBE") 
+            return handleSubscribeTypeMessage(socket, message, message.id);
+        if (message?.type?.toString() === "PING") 
+            return handlePingTypeMessage(socket);
+
     });
     
     socket.on("error", (error) => {
-        console.log(`Error occured: ${error.message}`);
+        console.log(`Error occured: ${error.message ?? JSON.stringify(error)}`);
+        clearInterval(intervalID);
+    });
+    
+    socket.on("close", () => {
+        clearInterval(intervalID);
     });
 
-    socket.on("close", () => {});
 });
 

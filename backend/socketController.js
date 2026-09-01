@@ -17,26 +17,32 @@ export function broadcastUpdate(socketServer, category) {
 // MESSAGE SENDER HANDLERS
 
 export function sendUpdateMessage(client, data) {
-    client.send(JSON.stringify({
-        type: "UPDATE",
-        data
-    }));
+    if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify({
+            type: "UPDATE",
+            data
+        }));
+    }
 }
 
 export function sendAllCountsMessage(client) {
-    client.send(JSON.stringify({
-        type: "ALL_COUNTS",
-        data: {
-            random: categories.get("RANDOM"),
-            count: categories.get("COUNTER")
-        }
-    }));
+    if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify({
+            type: "ALL_COUNTS",
+            data: {
+                random: categories.get("RANDOM"),
+                count: categories.get("COUNTER")
+            }
+        }));
+    }
 }
 
 export function sendPongMessage(client) {
-    client.send(JSON.stringify({
-        type: "PONG"
-    }));   
+    if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify({
+            type: "PONG"
+        }));   
+    }
 }
 
 
@@ -44,13 +50,20 @@ export function sendPongMessage(client) {
 
 // INCOMING MESSAGE HANDLERS
 
-export function handleSubscribeTypeMessage(socket, message) {
+export function handleSubscribeTypeMessage(socket, message, id) {
     if (!categories.has(message.subscribeTo)) return;
 
     socket.subscribedTo = message.subscribeTo;
-    sendUpdateMessage(socket, categories.get(message.subscribeTo));
+
+    if (socket.readyState === socket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "UPDATE",
+            id,
+            data: categories.get(message.subscribeTo)
+        }));
+    }
 }
 
-export function handlePongTypeMessage(socket) {
+export function handlePingTypeMessage(socket) {
     sendPongMessage(socket);
 }
