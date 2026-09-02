@@ -8,3 +8,9 @@ export function attatchSocketServerToRequest(socketServer) {
         next();
     }
 }
+
+export function getClientIp(req) {
+  // For Render:
+  // The first IP in the list is the client's real IP
+    return req.headers['x-forwarded-for']?.split(',')[0].trim() ?? req.socket.remoteAddress;
+}

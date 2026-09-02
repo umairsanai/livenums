@@ -1,17 +1,21 @@
 import { WebSocketServer } from "ws";
 import express from "express";
 import { decrementCounter, getCounter, getRandomNumber, getTotalClients, incrementCounter, updateRandomNumber } from "./restController.js";
-import { attatchSocketServerToRequest } from "./helpers.js";
+import { attatchSocketServerToRequest, getClientIp } from "./helpers.js";
 import { handlePingTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
+import { RateLimiter } from "./rateLimiter.js";
 
 const PORT = 3000;
 const HOST  = "0.0.0.0";
 const SOCKET_TIMEOUT_INTERVAL = 30; // seconds
+const connectionLimiter = new RateLimiter(60, 5); // 5 connections per minute per IP
+const messageLimiter = new RateLimiter(60, 120); // 120 messages per minute per IP
 
 const app = express();
+app.set("trust proxy", 1);
 
 const server = app.listen(PORT, HOST, () => {
-    console.clear();    
+    console.clear();
     console.log("Server started on port 3000...");
 });
 const socketServer = new WebSocketServer({ server, path: "/websocket" });
@@ -29,9 +33,22 @@ app.get("/counter", getCounter);
 app.post("/counter/increment", incrementCounter);
 app.post("/counter/decrement", decrementCounter);
 
-
 socketServer.on("connection", (socket, request) => {
+    
+    // 1. Rate Limit Connections
+    const clientIp = getClientIp(request);    
+    console.log(clientIp);
 
+    if (!connectionLimiter.isAllowed(clientIp)) {
+        socket.send(JSON.stringify({
+            type: "ERROR",
+            code: 429,
+            message: 'Connection rate limit exceeded.'             
+        }));
+        socket.close();
+        return;
+    }
+        
     socket.lastActiveTime = Date.now();
     sendAllCountsMessage(socket);
 
@@ -42,7 +59,17 @@ socketServer.on("connection", (socket, request) => {
     }, SOCKET_TIMEOUT_INTERVAL * 1000);
     
     socket.on("message", (data) => {
+        
         socket.lastActiveTime = Date.now();
+
+        // 2. Rate Limit Messages
+        if (!messageLimiter.isAllowed(clientIp)) {
+            return socket.send(JSON.stringify({ 
+                type: "ERROR",
+                code: 429,
+                message: 'Message rate limit exceeded.'             
+            }));
+        }
         
         const message = JSON.parse(data.toString());
         

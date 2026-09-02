@@ -73,6 +73,10 @@ socket.onmessage = (event) => {
     if (message.type === "PONG") {
         // DO NOTHING 
     }
+
+    if (message.type === "ERROR") {
+        alert(message.message);
+    }
 };
 
 function makeRandomBoxActive() {
