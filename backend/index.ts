@@ -4,6 +4,7 @@ import { decrementCounter, getCounter, getRandomNumber, getTotalClients, increme
 import { attatchSocketServerToRequest, getClientIp } from "./helpers.js";
 import { handlePingTypeMessage, handleSubscribeTypeMessage, sendAllCountsMessage } from "./socketController.js";
 import { RateLimiter } from "./rateLimiter.js";
+import { IncomingSocketMessage, IncomingSubscribeSocketMessage } from "./types.js";
 
 const PORT = 3000;
 const HOST  = "0.0.0.0";
@@ -36,7 +37,7 @@ app.post("/counter/decrement", decrementCounter);
 socketServer.on("connection", (socket, request) => {
     
     // 1. Rate Limit Connections
-    const clientIp = getClientIp(request);    
+    const clientIp = getClientIp(request);
     console.log(clientIp);
 
     if (!connectionLimiter.isAllowed(clientIp)) {
@@ -71,11 +72,10 @@ socketServer.on("connection", (socket, request) => {
             }));
         }
         
-        const message = JSON.parse(data.toString());
-        
-        if (message?.type?.toString() === "SUBSCRIBE") 
-            return handleSubscribeTypeMessage(socket, message, message.id);
-        if (message?.type?.toString() === "PING") 
+        const message: IncomingSocketMessage  = JSON.parse(data.toString());
+        if (message.type === "SUBSCRIBE") 
+            return handleSubscribeTypeMessage(socket, message as IncomingSubscribeSocketMessage);
+        if (message.type === "PING") 
             return handlePingTypeMessage(socket);
 
     });

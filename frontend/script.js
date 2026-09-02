@@ -27,7 +27,7 @@ socket.onopen = () => {
     statusText.textContent = 'Connected';
     makeRandomBoxActive();
 
-    const PINT_INTERVAL_TIME = 25; // seconds
+    const PINT_INTERVAL_TIME = 5; // seconds
     const pingInterval = setInterval(() => {
         socket.send(JSON.stringify({
             type: "PING"

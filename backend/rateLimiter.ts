@@ -1,11 +1,15 @@
 export class RateLimiter {
-  constructor(windowSec, maxRequests) {
-    this.windowMs = windowSec * 1000; // e.g., 60000 for 1 minute
+  private maxRequests: number;
+  private windowMs: number;
+  private clients: Map<String, Array<number>>
+  
+  constructor(windowSec: number, maxRequests: number) {
+    this.windowMs = Number(windowSec * 1000); // e.g., 60000 for 1 minute
     this.maxRequests = maxRequests;   // e.g., 20
     this.clients = new Map();         // key: clientId, value: [timestamp1, timestamp2, ...]
   }
 
-  isAllowed(clientId) {
+  isAllowed(clientId: string) {
     const now = Date.now();
     const windowStart = now - this.windowMs;
 
@@ -15,9 +19,9 @@ export class RateLimiter {
     }
 
     // Keep only requests within the current window
-    const timestamps = this.clients.get(clientId).filter(t => t > windowStart);
+    const timestamps = this.clients.get(clientId)!.filter(t => t > windowStart);
 
-    if (timestamps.length >= this.maxRequests) {
+    if (timestamps && timestamps.length >= this.maxRequests) {
       this.clients.set(clientId, timestamps);
       return false; // Rate limit exceeded
     }

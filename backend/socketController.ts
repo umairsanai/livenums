@@ -1,11 +1,19 @@
+import WebSocket, { Server } from "ws";
 import { categories } from "./restController.js";
+import { IncomingSubscribeSocketMessage } from "./types.js";
 
 
 
-export function broadcastUpdate(socketServer, category) {
-    socketServer.clients.forEach(client => {
-        if (client.subscribedTo === category && client.readyState === client.OPEN) 
-            sendUpdateMessage(client, categories.get(category));
+export function broadcastUpdate(socketServer: Server, category: string) {
+    socketServer.clients.forEach((client) => {
+        if (!categories.has(category)) {
+            console.error("Unknown category of counters is being requested in broadcastUpdate() function!");
+            return;
+        }
+        if (client.subscribedTo === category && client.readyState === client.OPEN) {
+            sendUpdateMessage(client, categories.get(category)!);
+        }
+            
     });
 }
 
@@ -16,7 +24,7 @@ export function broadcastUpdate(socketServer, category) {
 
 // MESSAGE SENDER HANDLERS
 
-export function sendUpdateMessage(client, data) {
+export function sendUpdateMessage(client: WebSocket, data: number) {
     if (client.readyState === client.OPEN) {
         client.send(JSON.stringify({
             type: "UPDATE",
@@ -25,7 +33,7 @@ export function sendUpdateMessage(client, data) {
     }
 }
 
-export function sendAllCountsMessage(client) {
+export function sendAllCountsMessage(client: WebSocket) {
     if (client.readyState === client.OPEN) {
         client.send(JSON.stringify({
             type: "ALL_COUNTS",
@@ -37,7 +45,7 @@ export function sendAllCountsMessage(client) {
     }
 }
 
-export function sendPongMessage(client) {
+export function sendPongMessage(client: WebSocket) {
     if (client.readyState === client.OPEN) {
         client.send(JSON.stringify({
             type: "PONG"
@@ -50,7 +58,7 @@ export function sendPongMessage(client) {
 
 // INCOMING MESSAGE HANDLERS
 
-export function handleSubscribeTypeMessage(socket, message, id) {
+export function handleSubscribeTypeMessage(socket: WebSocket, message: IncomingSubscribeSocketMessage) {
     if (!categories.has(message.subscribeTo)) return;
 
     socket.subscribedTo = message.subscribeTo;
@@ -58,12 +66,12 @@ export function handleSubscribeTypeMessage(socket, message, id) {
     if (socket.readyState === socket.OPEN) {
         socket.send(JSON.stringify({
             type: "UPDATE",
-            id,
+            id: message.id,
             data: categories.get(message.subscribeTo)
         }));
     }
 }
 
-export function handlePingTypeMessage(socket) {
+export function handlePingTypeMessage(socket: WebSocket) {
     sendPongMessage(socket);
 }
