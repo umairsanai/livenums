@@ -22,9 +22,21 @@ const signTokenAndSetInCookie = (username: string, res: Response, cookie_name: s
 }
 
 const verifyPassword = async (actual_password: string, input_password: string) => {
-    return await argon.verify(actual_password, input_password, {
-        secret: Buffer.from(process.env.PASSWORD_HASH_SECRET as string)
-    });
+    console.log("From VERIFY PASSWORD: ");
+    console.log(`user.password: ${actual_password} - password: ${input_password}`);
+
+    let isVerified: boolean | null = null;
+
+    try {
+        isVerified = await argon.verify(actual_password, input_password, {
+            secret: Buffer.from(process.env.PASSWORD_HASH_SECRET as string)
+        });
+    } catch (error: any) {
+        console.error("Couldn't verify the password!!");
+        console.error(error);
+    }
+    
+    return isVerified;
 }
 
 export const protect = handleAsyncError(async (req: Request, res: Response, next: NextFunction) => {
