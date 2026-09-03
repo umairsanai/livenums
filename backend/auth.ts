@@ -78,13 +78,17 @@ export const login = handleAsyncError(async (req: Request, res: Response, next: 
 
     const user = users.get(username);
 
-    if (!user)
+    if (!user) {
+        console.log("Incorrect Username");
         return next(new AppError("Incorrect credentials!", 401));
+    }
 
-    user.password = await hashPassword(user.password);
-
-    if (!await verifyPassword(user.password, password))
+    [user.username, user.password] = [user.username.trim(), user.password.trim()];
+    
+    if (!await verifyPassword(user.password, password)) {
+        console.log("Incorrect Password");
         return next(new AppError("Incorrect credentials!", 401));
+    }
 
     signTokenAndSetInCookie(user.username, res, "livenums-login-token");
 
