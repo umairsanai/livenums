@@ -1,6 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { Server } from "ws";
 
+
+export const allowedOrigins = ["http://127.0.0.1:4173", "http://localhost:4173", "http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:5500", "http://localhost:5500", "https://livenums.vercel.app", "https://www.livenums.vercel.app"];
+
+
 export function generateRandomNumber() {
     return Math.round((Math.random() * 1000));
 }
@@ -12,14 +16,13 @@ export function attatchSocketServerToRequest(socketServer: Server) {
     }
 }
 
-export function getClientIp(req: any) {
-
-    // For Render:
-    // The first IP in the list is the client's real IP
-    const header = req.headers['x-forwarded-for'];
-
-    if (header && typeof header === 'string') 
-        return header.split(',')[0].trim();
-
-    return req.socket.remoteAddress;
+export function parseCookies(cookieHeader: string | undefined) {
+    if (!cookieHeader) return {};
+    return cookieHeader
+        .split(';')
+        .reduce((cookies: Record<string, string>, cookie) => {
+            const [name, value] = cookie.trim().split('=');
+            cookies[name] = decodeURIComponent(value);
+            return cookies;
+        }, {});
 }

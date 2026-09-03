@@ -1,9 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import { generateRandomNumber } from "./helpers.js";
 import { broadcastUpdate } from "./socketController.js";
+import { handleAsyncError } from "./error.js";
 
 export const categories = new Map([["RANDOM", generateRandomNumber()], ["COUNTER", 1]]);
 
+
+export function getMe(req: Request, res: Response, next: NextFunction) {
+    res.status(200).json({
+        status: "success",
+        data: req.user
+    });
+}
 
 
 export function getTotalClients(req: Request, res: Response, next: NextFunction) {

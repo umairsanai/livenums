@@ -22,6 +22,31 @@ header {
     margin-bottom: 7.5rem;
 }
 
+.login-button {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    border: 1px solid #38bdf8;
+    border-radius: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    background-color: #38bdf8;
+    color: #0f172a;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.login-button:hover:not(:disabled) {
+    background-color: #7dd3fc;
+    transform: translateY(-2px);
+}
+
+.login-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
 h1 {
     font-size: 2.5rem;
     letter-spacing: 0.05em;
@@ -109,4 +134,11 @@ h1 {
     font-weight: 700;
     color: #ffffff;
     font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+    .login-button {
+        top: 1rem;
+        right: 1rem;
+    }
 }

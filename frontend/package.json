@@ -1,0 +1,17 @@
+{
+  "name": "livenums-frontend",
+  "version": "1.0.0",
+  "description": "Frontend of LiveNums. Written in HTML, CSS, and JavaScript.",
+  "license": "ISC",
+  "author": "Umair Anwar",
+  "type": "module",
+  "main": "script.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "prod": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}

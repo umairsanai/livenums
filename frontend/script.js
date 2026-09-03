@@ -1,89 +1,158 @@
-const socketUrl = 'wss://livenums.onrender.com/websocket';
-// const socketUrl = 'ws://localhost:3000/websocket';
-const socket = new WebSocket(socketUrl);
+const API_URL = 'http://localhost:3000';
+const SOCKET_URL = 'ws://localhost:3000/websocket';
+
+const LOGIN_CREDENTIALS = {
+    username: import.meta.env.VITE_USERNAME,
+    password: import.meta.env.VITE_PASSWORD
+};
+
+const REQUEST_RETRY_MAX_ATTEMPTS = 5;
+const INITIAL_REQUEST_RETRY_DELAY = 1_000;
 
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
-
+const loginButton = document.getElementById('loginButton');
 const boxes = document.querySelectorAll('.box');
-
-const REQUEST_RETRY_MAX_ATTEMPTS = 5;
-const INTIAL_REQUEST_RETRY_DELAY = 1; // seconds
 const pendingMessages = new Map();
 
-// Box Selection Logic 
+let socket = null;
+let pingIntervalId = null;
 
-boxes.forEach(box => {
+boxes.forEach((box) => {
     box.addEventListener('click', () => {
-        boxes.forEach(b => b.classList.remove('active'));
+        boxes.forEach((item) => item.classList.remove('active'));
         makeBoxActive(box);
     });
 });
 
-// WebSocket Setup 
+loginButton.addEventListener('click', login);
+initializeApp();
 
-socket.onopen = () => {
-    statusDot.classList.add('connected');
-    statusText.textContent = 'Connected';
-    makeRandomBoxActive();
+async function initializeApp() {
+    try {
+        const response = await fetch(`${API_URL}/me`, {
+            credentials: 'include'
+        });
+        const result = await response.json();
 
-    const PINT_INTERVAL_TIME = 5; // seconds
-    const pingInterval = setInterval(() => {
-        socket.send(JSON.stringify({
-            type: "PING"
-        }));
-    }, PINT_INTERVAL_TIME * 1000);
+        if (result.status === 'success') {
+            connectSocket();
+            return;
+        }
+    } catch (error) {
+        console.error('Session check failed:', error);
+    }
 
+    showLogin();
+}
+
+async function login() {
+    loginButton.disabled = true;
+    loginButton.textContent = 'Logging in...';
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(LOGIN_CREDENTIALS)
+        });
+        const result = await response.json();
+
+        console.log(result);
+
+        if (result.status === 'success') {
+            loginButton.hidden = true;
+            connectSocket();
+            return;
+        }
+    } catch (error) {
+        console.error('Login failed:', error);
+    }
+
+    loginButton.disabled = false;
+    loginButton.textContent = 'Login';
+    showLogin();
+}
+
+function showLogin() {
+    statusDot.classList.remove('connected');
+    statusText.textContent = 'Login required';
+    loginButton.hidden = false;
+}
+
+function connectSocket() {
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+
+    statusText.textContent = 'Connecting...';
+    socket = new WebSocket(SOCKET_URL);
+
+    socket.onopen = () => {
+        statusDot.classList.add('connected');
+        statusText.textContent = 'Connected';
+        makeRandomBoxActive();
+
+        pingIntervalId = window.setInterval(() => {
+            if (socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'PING' }));
+            }
+        }, 5_000);
+    };
+
+    socket.onmessage = handleSocketMessage;
 
     socket.onclose = () => {
+        clearPingInterval();
         statusDot.classList.remove('connected');
         statusText.textContent = 'Disconnected';
-        clearInterval(pingInterval);
     };
-
 
     socket.onerror = (error) => {
-        clearInterval(pingInterval);
-        console.error('WebSocket Error:', error);
-        alert("Something went wrong.... Check the console.");
+        clearPingInterval();
+        console.error('WebSocket error:', error);
     };
-};
+}
 
-socket.onmessage = (event) => {
-
+function handleSocketMessage(event) {
     const message = JSON.parse(event.data);
 
-    // Response of "SUBSCRIBE" message
-    if (message.type === "UPDATE") {
-
-        // Find box with .active class and Update its value
+    if (message.type === 'UPDATE') {
         const activeBox = document.querySelector('.box.active');
-        if (!activeBox) return;
-        activeBox.querySelector('.box-value').textContent = message.data;
+        if (activeBox) {
+            activeBox.querySelector('.box-value').textContent = message.data;
+        }
 
-        if (message.id) 
+        if (message.id) {
             pendingMessages.delete(message.id);
+        }
     }
 
-    if (message.type === "ALL_COUNTS") {
-        document.getElementById("randomValue").textContent = message.data.random;
-        document.getElementById("counterValue").textContent = message.data.count;
+    if (message.type === 'ALL_COUNTS') {
+        document.getElementById('randomValue').textContent = message.data.random;
+        document.getElementById('counterValue').textContent = message.data.count;
     }
 
-    if (message.type === "PONG") {
-        // DO NOTHING 
-    }
-
-    if (message.type === "ERROR") {
+    if (message.type === 'ERROR') {
         alert(message.message);
     }
-};
+}
+
+function clearPingInterval() {
+    if (pingIntervalId !== null) {
+        clearInterval(pingIntervalId);
+        pingIntervalId = null;
+    }
+}
 
 function makeRandomBoxActive() {
-    const randomBox = document.getElementById("randomBox");
-    if (!randomBox) 
-        return alert("Random box not found!");
-    makeBoxActive(randomBox);
+    const randomBox = document.getElementById('randomBox');
+    if (randomBox) {
+        makeBoxActive(randomBox);
+    }
 }
 
 function makeBoxActive(box) {
@@ -92,58 +161,55 @@ function makeBoxActive(box) {
 }
 
 function sendSubscribeMessage(boxName) {
-    if (socket.readyState !== WebSocket.OPEN) return;
-
-    const id = generateID();
-    const message = {
-        type: "SUBSCRIBE",
-        id,
-        subscribeTo: boxName
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        return;
     }
 
-    socket.send(JSON.stringify(message));
+    const id = generateId();
+    const message = {
+        type: 'SUBSCRIBE',
+        id,
+        subscribeTo: boxName
+    };
 
+    socket.send(JSON.stringify(message));
     pendingMessages.set(id, {
-        delay: INTIAL_REQUEST_RETRY_DELAY,
-        attemptsRemaining: REQUEST_RETRY_MAX_ATTEMPTS, 
+        delay: INITIAL_REQUEST_RETRY_DELAY,
+        attemptsRemaining: REQUEST_RETRY_MAX_ATTEMPTS,
         message
     });
 
-    // Schedule Retry Request
-    setTimeout(retryMessageRequest.bind(null, id), INTIAL_REQUEST_RETRY_DELAY * 1000);
+    window.setTimeout(retryMessageRequest, INITIAL_REQUEST_RETRY_DELAY, id);
 }
 
-function generateID(length = 10) {
+function generateId(length = 10) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
-    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let charactersLength = characters.length;
-    for ( let i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+
+    for (let index = 0; index < length; index += 1) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+
     return result;
 }
 
 function retryMessageRequest(messageId) {
-    if (!pendingMessages.has(messageId)) return;
-
-    let id = messageId;
-    let { message, attemptsRemaining, delay } = pendingMessages.get(id);
-
-    if (attemptsRemaining < 1) {
-        pendingMessages.delete(id);
+    const pendingRequest = pendingMessages.get(messageId);
+    if (!pendingRequest || !socket || socket.readyState !== WebSocket.OPEN) {
         return;
     }
 
-    attemptsRemaining--;
-    delay *= 2;
+    if (pendingRequest.attemptsRemaining < 1) {
+        pendingMessages.delete(messageId);
+        return;
+    }
 
-    socket.send(JSON.stringify(message));
-    setTimeout(retryMessageRequest.bind(null, id), delay * 1000)
-
-
-    pendingMessages.set(id, {
-        delay, 
-        attemptsRemaining, 
-        message
+    const delay = pendingRequest.delay * 2;
+    socket.send(JSON.stringify(pendingRequest.message));
+    pendingMessages.set(messageId, {
+        ...pendingRequest,
+        delay,
+        attemptsRemaining: pendingRequest.attemptsRemaining - 1
     });
+    window.setTimeout(retryMessageRequest, delay, messageId);
 }

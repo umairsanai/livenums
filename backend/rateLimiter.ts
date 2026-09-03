@@ -30,4 +30,12 @@ export class RateLimiter {
     this.clients.set(clientId, timestamps);
     return true;
   }
+
+  static generateRateLimitError(message: string) {
+    return JSON.stringify({
+        type: "ERROR",
+        code: 429,
+        message
+    })
+  }
 }
