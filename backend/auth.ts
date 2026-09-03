@@ -63,6 +63,8 @@ export const login = handleAsyncError(async (req: Request, res: Response, next: 
 
     const user = users.get(username);
 
+    console.log(user);
+
     if (!user || !await verifyPassword(user.password, password))
         return next(new AppError("Incorrect credentials!", 401));
 
