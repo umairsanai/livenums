@@ -1,6 +1,5 @@
-const API_URL = 'http://localhost:3000';
-const SOCKET_URL = 'ws://localhost:3000/websocket';
-
+const API_URL =  import.meta.env.VITE_MODE === "dev" ? "http://localhost:3000" : "https://livenums.onrender.com";
+const SOCKET_URL = import.meta.env.VITE_MODE === "dev" ? "ws://localhost:3000/websocket" : "wss://livenums.onrender.com/websocket";
 const LOGIN_CREDENTIALS = {
     username: import.meta.env.VITE_USERNAME,
     password: import.meta.env.VITE_PASSWORD
