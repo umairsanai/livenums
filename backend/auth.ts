@@ -11,7 +11,6 @@ const signJwtToken = (username: string) => {
 }
 
 const signTokenAndSetInCookie = (username: string, res: Response, cookie_name: string) => {
-    console.log("Token: " + signJwtToken(username));
     res.cookie(cookie_name, signJwtToken(username), {
         httpOnly: true,
         sameSite: "none",
@@ -21,22 +20,26 @@ const signTokenAndSetInCookie = (username: string, res: Response, cookie_name: s
     });
 }
 
-const verifyPassword = async (actual_password: string, input_password: string) => {
-    console.log("From VERIFY PASSWORD: ");
-    console.log(`user.password: ${actual_password} - password: ${input_password}`);
-
-    let isVerified: boolean | null = null;
-
+const hashPassword = async (password: string) => {
     try {
-        isVerified = await argon.verify(actual_password, input_password, {
+        return (await argon.hash(password, {
+            hashLength: 32,
+            type: argon.argon2id,
+            secret: Buffer.from(process.env.PASSWORD_HASH_SECRET as string)
+        }));
+    } catch(err) {
+        throw new AppError("Error in hashing password");
+    }
+}
+
+const verifyPassword = async (actual_password: string, input_password: string) => {    
+    try {
+        return await argon.verify(actual_password, input_password, {
             secret: Buffer.from(process.env.PASSWORD_HASH_SECRET as string)
         });
     } catch (error: any) {
-        console.error("Couldn't verify the password!!");
-        console.error(error);
+        throw new AppError("Couldn't verify the password!");
     }
-    
-    return isVerified;
 }
 
 export const protect = handleAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -75,26 +78,15 @@ export const login = handleAsyncError(async (req: Request, res: Response, next: 
 
     const user = users.get(username);
 
-    if (!user || !await verifyPassword(user.password, password))
+    if (!user)
         return next(new AppError("Incorrect credentials!", 401));
 
-    try {
-        if (!user || !await verifyPassword(user.password, password))
-            return next(new AppError("Incorrect credentials!", 401));
-    } catch (error: any) {
-        console.error("PASSWORD VERIFICATION ERROR:");
-        console.error(error);
-    }
+    user.password = await hashPassword(user.password);
 
-    console.log("Password Verified!");
+    if (!await verifyPassword(user.password, password))
+        return next(new AppError("Incorrect credentials!", 401));
 
-    // TODO: remove this "!" from user
-    try {
-        signTokenAndSetInCookie(user!.username, res, "livenums-login-token");
-    } catch (error: any) {
-        console.error("TOKEN SIGNING / COOKIE CREATING ERROR:");
-        console.error(error);
-    }
+    signTokenAndSetInCookie(user.username, res, "livenums-login-token");
 
     res.status(200).json({
         status: "success",
