@@ -63,12 +63,26 @@ export const login = handleAsyncError(async (req: Request, res: Response, next: 
 
     const user = users.get(username);
 
-    console.log(user);
-
     if (!user || !await verifyPassword(user.password, password))
         return next(new AppError("Incorrect credentials!", 401));
 
-    signTokenAndSetInCookie(user.username, res, "livenums-login-token");
+    try {
+        if (!user || !await verifyPassword(user.password, password))
+            return next(new AppError("Incorrect credentials!", 401));
+    } catch (error: any) {
+        console.error("PASSWORD VERIFICATION ERROR:");
+        console.error(error);
+    }
+
+    console.log("Password Verified!");
+
+    // TODO: remove this "!" from user
+    try {
+        signTokenAndSetInCookie(user!.username, res, "livenums-login-token");
+    } catch (error: any) {
+        console.error("TOKEN SIGNING / COOKIE CREATING ERROR:");
+        console.error(error);
+    }
 
     res.status(200).json({
         status: "success",
