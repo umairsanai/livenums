@@ -13,12 +13,11 @@ The interesting part is that the frontend **doesn't poll the server for updates*
 
 ## Tech Stack
 
+* TypeScript
+* React.js
 * Node.js
 * Express.js
 * `ws` WebSocket library
-* JavaScript
-* HTML
-* CSS
 
 ## Purpose
 
