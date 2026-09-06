@@ -13,6 +13,8 @@ const pendingMessages = new Map();
 export function connectSocket(
     setActiveBox: React.Dispatch<React.SetStateAction<string>>,
     setActiveBoxValue: React.Dispatch<React.SetStateAction<number>>,
+    setRandomBoxValue: React.Dispatch<React.SetStateAction<number>>,
+    setCounterBoxValue: React.Dispatch<React.SetStateAction<number>>,
     setConnectionStatus: React.Dispatch<React.SetStateAction<string>>
 ) {
     if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
@@ -35,7 +37,7 @@ export function connectSocket(
     };
 
     socket.onmessage = (e) => 
-        handleSocketMessage(e, setActiveBox, setActiveBoxValue);
+        handleSocketMessage(e, setActiveBoxValue, setRandomBoxValue, setCounterBoxValue);
 
     socket.onclose = () => {
         clearInterval(pingIntervalId);
@@ -50,8 +52,9 @@ export function connectSocket(
 
 function handleSocketMessage(
     event: MessageEvent<any>,
-    setActiveBox: React.Dispatch<React.SetStateAction<string>>, 
-    setActiveBoxValue: React.Dispatch<React.SetStateAction<number>>
+    setActiveBoxValue: React.Dispatch<React.SetStateAction<number>>,
+    setRandomBoxValue: React.Dispatch<React.SetStateAction<number>>,
+    setCounterBoxValue: React.Dispatch<React.SetStateAction<number>>
 ) {
     const message = JSON.parse(event.data);
 
@@ -63,10 +66,8 @@ function handleSocketMessage(
     }
 
     if (message.type === 'ALL_COUNTS') {
-        setActiveBox("counter");
-        setActiveBoxValue(Number(message.data.count));
-        setActiveBox("random");
-        setActiveBoxValue(Number(message.data.random));
+        setCounterBoxValue(Number(message.data.count));
+        setRandomBoxValue(Number(message.data.random));
     }
 
     if (message.type === 'ERROR') {

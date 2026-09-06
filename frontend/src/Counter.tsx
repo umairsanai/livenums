@@ -1,21 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useEffectAfterMount } from "./helpers";
 
 type CounterProps = {
     title: string;
     activeBox: string;  
     activeBoxValue: number;
+    initialValue: number;
     setActiveBox: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Counter = ({title, activeBox, activeBoxValue, setActiveBox} : CounterProps) => {
+const Counter = ({title, activeBox, setActiveBox, activeBoxValue, initialValue} : CounterProps) => {
 
     const isActiveBox = title.toLowerCase() === activeBox?.toLowerCase()
     const [value, setValue] = useState(0);
 
-    useEffect(() => {
+    useEffectAfterMount(() => {
         if (isActiveBox)
             setValue(activeBoxValue);
     }, [activeBoxValue]);
+
+    useEffectAfterMount(() => {
+        setValue(initialValue);
+    }, [initialValue]);
 
     return ( 
         <div 
