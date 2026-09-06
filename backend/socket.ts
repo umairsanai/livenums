@@ -98,6 +98,8 @@ export const socketConnectionHandler = (socket: WebSocket, request: IncomingMess
             return socket.send(RateLimiter.generateRateLimitError("Message rate limit exceeded"));
         
         const message: IncomingSocketMessage  = JSON.parse(data.toString());
+        console.log({type: message.type});
+
         if (message.type === "SUBSCRIBE") 
             return handleSubscribeTypeMessage(socket, message as IncomingSubscribeSocketMessage);
         if (message.type === "PING") 
