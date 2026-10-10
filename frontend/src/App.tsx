@@ -42,8 +42,8 @@ function App() {
       <Header connectionStatus={connectionStatus} setConnectionStatus={setConnectionStatus} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>
 
       <main className="boxes-container">
-        <Counter title="random" activeBox={activeBox} setActiveBox={setActiveBox} activeBoxValue={activeBoxValue} initialValue={randomBoxValue}/>
-        <Counter title="counter" activeBox={activeBox} setActiveBox={setActiveBox} activeBoxValue={activeBoxValue} initialValue={counterBoxValue}/>
+        <Counter title="random" activeBox={activeBox} setActiveBox={setActiveBox} activeBoxValue={activeBoxValue} initialValue={randomBoxValue} isLoggedIn={isLoggedIn}/>
+        <Counter title="counter" activeBox={activeBox} setActiveBox={setActiveBox} activeBoxValue={activeBoxValue} initialValue={counterBoxValue} isLoggedIn={isLoggedIn}/>
       </main>
 
     </div>

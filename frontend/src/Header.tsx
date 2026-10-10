@@ -29,7 +29,7 @@ const Header = ({connectionStatus, setConnectionStatus, isLoggedIn, setIsLoggedI
 
     return (
         <header>
-            <h1>Welcome Back</h1>
+            <h1>Welcome to LiveNums</h1>
             <div className="connection-status">
                 <span className={`status-dot ${connectionStatus === "Connected" ? "connected" : ""}`} id="statusDot"></span>
                 <span id="statusText">{connectionStatus}</span>

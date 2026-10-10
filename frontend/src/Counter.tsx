@@ -6,10 +6,11 @@ type CounterProps = {
     activeBox: string;  
     activeBoxValue: number;
     initialValue: number;
+    isLoggedIn: boolean;
     setActiveBox: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Counter = ({title, activeBox, setActiveBox, activeBoxValue, initialValue} : CounterProps) => {
+const Counter = ({title, activeBox, setActiveBox, activeBoxValue, initialValue, isLoggedIn} : CounterProps) => {
 
     const isActiveBox = title.toLowerCase() === activeBox?.toLowerCase()
     const [value, setValue] = useState(0);
@@ -28,7 +29,7 @@ const Counter = ({title, activeBox, setActiveBox, activeBoxValue, initialValue} 
             id={`${title.toLowerCase()}Box`}
             className={`box ${isActiveBox ? "active" : ""}`} 
             data-box-name={title.toUpperCase()} 
-            onClick={() => setActiveBox(title.toLowerCase())}
+            onClick={() => isLoggedIn && setActiveBox(title.toLowerCase())}
         >
             <h2 className="box-title">{title.toUpperCase()}</h2>
             <div className="box-value" id={`${title.toLowerCase()}Value`}>{value}</div>
