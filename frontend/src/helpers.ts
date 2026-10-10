@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 export const API_URL =  import.meta.env.VITE_MODE === "dev" ? "http://localhost:3000" : "https://livenums.onrender.com";
 
@@ -12,16 +12,26 @@ export function generateID(length = 10) {
     return result;
 }
 
+export async function sendCounterUpdateRequest() {
+    return fetch(`${API_URL}/counter/${Math.random() < 0.8 ? "increment" : "decrement"}`, {
+        method: "POST"
+    }).catch(console.error);
+}
 
-export function useEffectAfterMount(fn : () => void, dependencies: any[]) {
-    const isMounted = useRef(false);
+export async function sendRandomCounterUpdateRequest() {
+    return fetch(`${API_URL}/random`, {
+        method: "POST"
+    }).catch(console.error);
+}
+
+export function useEffectAfterMount(fn: () => void | (() => void), dependencies: React.DependencyList) {
+    const isMounted = useRef(true);
 
     useEffect(() => {
         if (isMounted.current) {
             isMounted.current = false;
             return;
         }
-        
-        fn();
+        return fn();
     }, dependencies);
 }
